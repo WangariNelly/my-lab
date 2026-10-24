@@ -1,0 +1,49 @@
+module: W01
+tickets:
+  - id: W01-T1
+    type: request
+    short_description: "Prove the AWS budget alerts actually fire"
+    description: |
+      Finance asked whether we would notice a runaway bill. We have a budget, but
+      nobody has ever seen an alert. Please prove the alert path end to end.
+    assignment_group: Platform
+    acceptance_criteria:
+      - "opslab-monthly budget exists with 50/80/100 % actual and 100 % forecast alerts"
+      - "A test budget fired and the e-mail is attached to this ticket"
+      - "The test budget is deleted afterwards"
+  - id: W01-T2
+    type: request
+    short_description: "Verify the shop CMDB matches itsm/cmdb/shop.yaml"
+    description: |
+      Before we wire alerts to ServiceNow, confirm the CMDB is complete. Incidents
+      that land on the wrong CI or group cost us an hour each.
+    assignment_group: SRE
+    cmdb_ci: shop-checkout
+    acceptance_criteria:
+      - "seed-cmdb.py re-run is a no-op (all 'updated', nothing 'created')"
+      - "shop-checkout's dependency view shows shop-postgres and shop-kafka"
+      - "Every CI has a support group"
+  - id: W01-T3
+    type: request
+    short_description: "Enforce conventional commit messages"
+    description: |
+      Our changelog is generated from commit messages and half of them are "fix" or
+      "wip". Add a check so non-conventional messages are rejected before they land.
+    assignment_group: Platform
+    acceptance_criteria:
+      - "A commit-msg check (pre-commit hook or CI job) rejects 'wip' and accepts 'feat(w01): x'"
+      - "Documented in the PR with an example of both"
+      - "Merged through a PR that passes all checks"
+  - id: W01-T4
+    type: incident
+    short_description: "Storefront in dev is slow for everyone"
+    description: |
+      Several developers say product pages in their local shop take 20+ seconds since
+      this morning. Nobody changed code. Please investigate and tell us what to fix.
+    priority: 4
+    assignment_group: SRE
+    cmdb_ci: shop-kind-dev
+    acceptance_criteria:
+      - "Root cause identified from a trace (screenshot or trace id in the work notes)"
+      - "Timeline and MTTR in the work notes"
+      - "One prevention item proposed"
