@@ -1,0 +1,11 @@
+# Curriculum prose: allow long lines, inline HTML for <details>, and repeated
+# sub-headings like "Hints" under different drills.
+default: true
+MD013: false
+MD024: { siblings_only: true }
+# Corpus docs carry a title in front matter and a matching H1 in the body.
+MD025: { front_matter_title: "" }
+MD033: { allowed_elements: [details, summary, br, kbd] }
+MD041: false
+# MD060 (table pipe spacing style) flags ordinary spaced tables; the rest of the table rules still apply.
+MD060: false

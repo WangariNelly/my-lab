@@ -1,0 +1,75 @@
+# Checks your lab repository: links, YAML, lint (pre-commit), and the unit tests.
+name: lab-checks
+
+on:
+  pull_request:
+  push:
+    branches: [master, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lab-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  structure:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Internal links
+        run: node scripts/check-links.mjs
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: YAML parses (Taskfile included)
+        run: pip install pyyaml && python scripts/check-yaml.py
+
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.16.5"
+      - uses: terraform-linters/setup-tflint@v4
+      - name: Install tflint plugins
+        run: tflint --init
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Install trivy
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
+            | sh -s -- -b /usr/local/bin v0.75.0
+      - uses: pre-commit/action@v3.0.1
+
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-test.txt
+      - run: if [ -f ai/requirements.txt ]; then pip install -r ai/requirements.txt; fi
+      - run: python -m pytest -q
+        env:
+          PYTHONPATH: lib
+
+  external-links:
+    # Advisory: external sites are flaky, so this never blocks a merge.
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: lycheeverse/lychee-action@v2
+        with:
+          args: --no-progress --exclude-path projects '**/*.md'
+          fail: false

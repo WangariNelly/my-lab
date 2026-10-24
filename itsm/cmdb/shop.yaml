@@ -1,0 +1,119 @@
+# The shop's canonical CMDB model. Seeded into your ServiceNow PDI by
+# itsm/seed-cmdb.py (idempotent). Names here are referenced by ticket files,
+# graders, fault injectors and integrations — do not rename them.
+#
+# class:          preferred CMDB table
+# fallback_class: used if the preferred table doesn't exist on your instance
+#                 (some classes arrive only with plugins such as CMDB CI Class
+#                 Models or Discovery)
+
+groups:
+  - name: Platform
+    description: Owns compute, networking, Kubernetes and the delivery platform.
+  - name: DBA
+    description: Owns Postgres, Redis, Kafka and ClickHouse.
+  - name: SRE
+    description: Owns SLOs, observability, on-call and incident command.
+  - name: SecOps
+    description: Owns Wazuh, hardening, vulnerability and security incidents.
+
+business_services:
+  - name: shop-storefront
+    description: Browsing, product catalog, cart and recommendations (customer-facing).
+    support_group: SRE
+    busines_criticality: 1 - most critical
+  - name: shop-checkout
+    description: Checkout, payment, shipping and order confirmation (revenue path).
+    support_group: SRE
+    busines_criticality: 1 - most critical
+  - name: shop-analytics
+    description: Order events, accounting, fraud detection and analytics (internal).
+    support_group: DBA
+    busines_criticality: 3 - less critical
+
+cis:
+  # C1/C2 VM fleet
+  - name: shop-vm-1
+    class: cmdb_ci_linux_server
+    fallback_class: cmdb_ci_server
+    description: Shop application VM 1 (C1 hand-built, C2 rebuilt from code)
+    support_group: Platform
+  - name: shop-vm-2
+    class: cmdb_ci_linux_server
+    fallback_class: cmdb_ci_server
+    description: Shop application VM 2
+    support_group: Platform
+  - name: shop-vm-3
+    class: cmdb_ci_linux_server
+    fallback_class: cmdb_ci_server
+    description: Shop application VM 3
+    support_group: Platform
+  - name: shop-lb
+    class: cmdb_ci_linux_server
+    fallback_class: cmdb_ci_server
+    description: HAProxy load balancer with TLS termination in front of the shop VMs (later the ALB)
+    support_group: Platform
+  - name: shop-wazuh
+    class: cmdb_ci_linux_server
+    fallback_class: cmdb_ci_server
+    description: Wazuh manager (single node) for the shop fleet
+    support_group: SecOps
+  # Data tier
+  - name: shop-postgres
+    class: cmdb_ci_db_postgresql_instance
+    fallback_class: cmdb_ci_db_instance
+    description: Shop Postgres (RDS for staging/prod, CloudNativePG on Kubernetes)
+    support_group: DBA
+  - name: shop-redis
+    class: cmdb_ci_appl
+    fallback_class: cmdb_ci_appl
+    description: Shop Redis/Valkey (cart sessions, cache)
+    support_group: DBA
+  - name: shop-kafka
+    class: cmdb_ci_appl
+    fallback_class: cmdb_ci_appl
+    description: Shop Kafka (order events)
+    support_group: DBA
+  - name: shop-clickhouse
+    class: cmdb_ci_appl
+    fallback_class: cmdb_ci_appl
+    description: Shop ClickHouse (analytics)
+    support_group: DBA
+  # Kubernetes clusters
+  - name: shop-eks-prod
+    class: cmdb_ci_kubernetes_cluster
+    fallback_class: cmdb_ci_cluster
+    description: EKS cluster, prod environment
+    support_group: Platform
+  - name: shop-eks-staging
+    class: cmdb_ci_kubernetes_cluster
+    fallback_class: cmdb_ci_cluster
+    description: EKS cluster, staging environment
+    support_group: Platform
+  - name: shop-kind-dev
+    class: cmdb_ci_kubernetes_cluster
+    fallback_class: cmdb_ci_cluster
+    description: kind cluster, dev environment (local)
+    support_group: Platform
+  - name: shop-aks-parity
+    class: cmdb_ci_kubernetes_cluster
+    fallback_class: cmdb_ci_cluster
+    description: AKS cluster used for Azure parity labs
+    support_group: Platform
+
+# parent "Depends on::Used by" child  (parent depends on child)
+relationships:
+  - [shop-storefront, shop-lb]
+  - [shop-storefront, shop-vm-1]
+  - [shop-storefront, shop-vm-2]
+  - [shop-storefront, shop-vm-3]
+  - [shop-storefront, shop-redis]
+  - [shop-storefront, shop-eks-prod]
+  - [shop-checkout, shop-postgres]
+  - [shop-checkout, shop-kafka]
+  - [shop-checkout, shop-eks-prod]
+  - [shop-analytics, shop-kafka]
+  - [shop-analytics, shop-clickhouse]
+  - [shop-lb, shop-vm-1]
+  - [shop-lb, shop-vm-2]
+  - [shop-lb, shop-vm-3]

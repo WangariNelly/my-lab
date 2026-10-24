@@ -1,0 +1,61 @@
+# Accepted trivy findings for Kubernetes manifests and Dockerfiles (HIGH/CRITICAL only).
+# Each entry names the paths and why. A new finding anywhere else fails CI, so harden new
+# manifests instead of adding to this file. Terraform and CloudFormation exceptions are inline
+# (`#trivy:ignore:<ID>` next to the resource) and listed in each module's Good-practice checklist.
+misconfigurations:
+  # Teaching baselines and test fixtures: these are intentionally unhardened because a later
+  # step hardens them (W14 -> W16) or a policy test needs a bad example (W21).
+  - id: KSV-0014
+    paths:
+      - modules/W14-kubernetes-core/manifests/lab-workloads.yaml
+      - modules/W14-kubernetes-core/kustomize/overlays/staging/spread-patch.yaml
+      - modules/W21-supply-chain-security/policies/tests/resources.yaml
+      - modules/electives/service-mesh/config/lab-app.yaml
+    statement: Teaching baseline or policy-test fixture; W16 and W21 harden the real workloads.
+  - id: KSV-0118
+    paths:
+      - modules/W14-kubernetes-core/manifests/lab-workloads.yaml
+      - modules/W14-kubernetes-core/kustomize/overlays/staging/spread-patch.yaml
+      - modules/W21-supply-chain-security/policies/tests/resources.yaml
+      - modules/electives/service-mesh/config/lab-app.yaml
+    statement: Teaching baseline or policy-test fixture; W16 and W21 harden the real workloads.
+
+  # Deployed lab components whose images need a writable root filesystem or run as root by
+  # design. The securityContext below is NOT hardened because it was not verified against a
+  # running cluster; hardening these is a documented next step (verify the image's user and
+  # writable paths first, then add emptyDir mounts for them).
+  - id: KSV-0014
+    paths:
+      - ai/gateway/k8s/deployment.yaml
+      - convergence/C4-delivery-platform/gitops/c4-hooks/hooks.yaml
+      - modules/W22-secrets-vault-consul/vault/manifests/pki-shop.yaml
+      - modules/W27-multi-backend-logging/splunk/splunk.yaml
+      - modules/W28-itsm-oncall-aiops/rules/eda/eda.yaml
+      - scenarios/S1-db-incident-auto-remediation/eda/eda.yaml
+      - scenarios/S9-azure-parity-db-incident/k8s/checkout-load.yaml
+      - modules/W33-platform-engineering-ai-ops/backstage/templates/shop-service/gitops-skeleton/image.yaml
+      - modules/W33-platform-engineering-ai-ops/backstage/templates/shop-service/sample-output/gitops/services/recommendation-v2/image.yaml
+    statement: Image needs a writable root filesystem; unverified without a cluster, see the header.
+  - id: KSV-0118
+    paths:
+      - modules/W27-multi-backend-logging/splunk/splunk.yaml
+      - modules/W32-performance-chaos-finops/nginx/edge.yaml
+      - modules/W33-platform-engineering-ai-ops/backstage/templates/shop-service/gitops-skeleton/image.yaml
+      - modules/W33-platform-engineering-ai-ops/backstage/templates/shop-service/sample-output/gitops/services/recommendation-v2/image.yaml
+    statement: Vendor or demo image that runs as root; unverified without a cluster, see the header.
+
+  # The S1 remediation Role needs pods/exec to run the idle-session kill inside the database pod;
+  # the kill switch (opslab-remediation ConfigMap) gates it and S1 grades that it fails closed.
+  - id: KSV-0053
+    paths:
+      - scenarios/S1-db-incident-auto-remediation/eda/eda.yaml
+    statement: Deliberate, kill-switch-gated remediation permission (see S1 README).
+
+  # Lab images used as scan targets or throwaway fixtures.
+  - id: DS-0002
+    paths:
+      - modules/W02-linux/lab/Dockerfile
+      - modules/W04-security-hardening-wazuh/lab/Dockerfile
+      - modules/W19-cicd-github-actions/db/Dockerfile
+      - modules/W21-supply-chain-security/scan/lab/Dockerfile
+    statement: Lab image needs root (systemd, packages, scan target); not deployed to shared clusters.

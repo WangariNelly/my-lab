@@ -1,0 +1,56 @@
+# Same checks locally (pre-commit) and in CI (.github/workflows/repo-checks.yml).
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+        exclude: ^(modules|convergence|platform|apps)/.*/(templates|charts)/
+      - id: check-json
+        # devcontainer.json is JSONC; Monaco config templates are Go-templated JSON
+        exclude: ^(\.devcontainer/devcontainer\.json|dynatrace/monaco/projects/.*\.json)$
+      - id: check-added-large-files
+        args: [--maxkb=500]
+      - id: detect-private-key
+      - id: check-merge-conflict
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.49.1
+    hooks:
+      - id: markdownlint
+        args: [--config, .markdownlint.yaml]
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+        args: [-c, .yamllint.yaml]
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.109.2
+    hooks:
+      - id: terraform_fmt
+      - id: terraform_tflint
+        args: ["--args=--config=__GIT_WORKING_DIR__/.tflint.hcl"]
+      - id: terraform_trivy
+        # The hook scans from the repo root, so it covers Kubernetes manifests and
+        # Dockerfiles too; accepted exceptions (with reasons) are in .trivyignore.yaml.
+        args: ["--args=--severity=HIGH,CRITICAL --ignorefile=__GIT_WORKING_DIR__/.trivyignore.yaml"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.10
+    hooks:
+      - id: ruff
+      - id: ruff-format

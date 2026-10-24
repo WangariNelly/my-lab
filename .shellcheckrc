@@ -1,0 +1,9 @@
+# Libraries here are `source`d by many scripts, so shellcheck cannot see where
+# their variables are used (SC2034) or follow every path (SC1091).
+external-sources=true
+disable=SC1091,SC2034
+# Single-quoted strings holding $VARS are intentional where a command is sent
+# to a remote shell (SSM, kubectl exec): SC2016. SC2329 (function never
+# invoked) fires on functions called through dispatch tables. SC2001 (use
+# parameter expansion instead of sed) is style only.
+disable=SC2016,SC2329,SC2001

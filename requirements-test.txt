@@ -1,0 +1,5 @@
+# Minimal set the repo's pytest suite needs. CI installs this, not the full
+# devcontainer toolset in requirements-dev.txt.
+pytest>=8.3
+pyyaml>=6.0
+boto3>=1.35

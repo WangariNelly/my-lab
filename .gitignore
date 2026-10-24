@@ -1,0 +1,50 @@
+# Local configuration and secrets
+.env
+*.pem
+*.key
+kubeconfig*
+!**/kubeconfig*.example
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+.terraform.lock.hcl.bak
+override.tf
+override.tf.json
+terraform.tfvars
+!*.tfvars.example
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.venv/
+
+# Node / Backstage
+node_modules/
+dist/
+
+# Course artefacts
+evidence/
+apps/shop/upstream/
+*.log
+
+# Editors / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+
+modules/W04-security-hardening-wazuh/wazuh/upstream/
+modules/W04-security-hardening-wazuh/.state/
+
+# S9 generated Terraform backend override (local-state mode)
+*_override.tf
+
+# Packer
+platform/packer/manifest.json
+modules/W11-ansible-packer/packer/manifest.json

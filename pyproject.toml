@@ -1,0 +1,21 @@
+# Tooling config only — this repo is a curriculum, not a Python package.
+[tool.pytest.ini_options]
+testpaths = ["tests", "ai/tests"]
+pythonpath = ["lib"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S"]
+ignore = ["S101"]  # asserts are fine in tests and graders
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S"]
+"ai/tests/**" = ["S"]
+# Lab tooling talks to operator-configured endpoints (urlopen, subprocess with
+# fixed argv), uses random for fault simulation, and binds demo apps to
+# 0.0.0.0 in containers. Long note/message strings in graders are intentional.
+"{ai,convergence,faults,modules,scenarios}/**" = ["S104", "S310", "S311", "S603", "S607", "S608", "E501"]
+"lib/**" = ["S310"]

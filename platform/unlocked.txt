@@ -1,0 +1,4 @@
+# Graders you've unlocked, one id per line (read by `task grade:all`).
+# Add each convergence and scenario as you pass it, e.g.:
+# C1
+# S3

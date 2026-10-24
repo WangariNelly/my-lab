@@ -1,0 +1,13 @@
+# Extends gitleaks' default rules. The only allowlisted values are deliberately
+# fake credentials used by fault injectors and tests; real secrets must never
+# be added here.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Fake credentials used by fault injectors and tests"
+regexes = [
+  '''AKIAEXPIREDKEY000000''',
+  '''AKIAIOSFODNN7EXAMPLE''',
+  '''dt0c01\.ROTATEDNOTPROPAGATED''',
+]

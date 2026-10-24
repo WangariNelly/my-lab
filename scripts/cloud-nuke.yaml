@@ -1,0 +1,35 @@
+# Only ever matches resources tagged program=opslab. Used by scripts/nuke.sh
+# with CONFIRM=yes. Extend per resource type as modules add new ones.
+# Reference: https://github.com/gruntwork-io/cloud-nuke#config-file
+s3:
+  include:
+    tags:
+      program: "^opslab$"
+ec2:
+  include:
+    tags:
+      program: "^opslab$"
+ebs:
+  include:
+    tags:
+      program: "^opslab$"
+rds:
+  include:
+    tags:
+      program: "^opslab$"
+eks:
+  include:
+    tags:
+      program: "^opslab$"
+elb:
+  include:
+    tags:
+      program: "^opslab$"
+elbv2:
+  include:
+    tags:
+      program: "^opslab$"
+lambda:
+  include:
+    tags:
+      program: "^opslab$"

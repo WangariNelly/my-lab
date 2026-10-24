@@ -1,0 +1,118 @@
+# https://taskfile.dev — run `task --list` for everything available.
+version: "3"
+
+dotenv: [".env"]
+
+env:
+  PYTHONPATH: "{{.ROOT_DIR}}/lib"
+
+vars:
+  RESOLVE: "{{.ROOT_DIR}}/scripts/resolve.sh"
+
+tasks:
+  default:
+    cmds: [task --list]
+    silent: true
+
+  # ---------------------------------------------------------------- quality
+  check:
+    desc: All repo checks (what CI runs)
+    cmds:
+      - pre-commit run --all-files
+      - task: check:links
+      - task: check:yaml
+      - task: test
+
+  check:yaml:
+    desc: Every YAML file (Taskfile included) must parse; template files are skipped
+    cmds: [python scripts/check-yaml.py]
+
+  check:links:
+    desc: Fail on broken relative links in Markdown
+    cmds: [node scripts/check-links.mjs]
+
+  test:
+    desc: Unit tests for the shared tooling (lib/, itsm/, faults/, ai/)
+    cmds: [python -m pytest -q]
+
+  # ------------------------------------------------------- lab lifecycle
+  up:
+    desc: "Bring up a module/convergence (MODULE=W09) or, with no MODULE, the cumulative platform"
+    cmds:
+      - bash "$(bash {{.RESOLVE}} '{{.MODULE | default "platform"}}')/scripts/up.sh"
+
+  down:
+    desc: "Tear down a module/convergence (MODULE=W09) or the platform"
+    cmds:
+      - bash "$(bash {{.RESOLVE}} '{{.MODULE | default "platform"}}')/scripts/down.sh"
+
+  verify-clean:
+    desc: "List any AWS resources still tagged module=MODULE (must be empty after down)"
+    cmds: ['bash scripts/verify-clean.sh "{{.MODULE}}"']
+    requires: { vars: [MODULE] }
+
+  nuke:
+    desc: "Destroy the whole platform, then sweep anything tagged program=opslab (CONFIRM=yes to delete)"
+    cmds: [bash scripts/nuke.sh]
+
+  # ---------------------------------------------------------- practice
+  break:
+    desc: "Inject hidden fault N for MODULE (task break MODULE=W02 N=1)"
+    cmds:
+      - bash faults/run.sh "{{.MODULE}}" "{{.N}}" inject
+    requires: { vars: [MODULE, N] }
+
+  break:revert:
+    cmds:
+      - bash faults/run.sh "{{.MODULE}}" "{{.N}}" revert
+    requires: { vars: [MODULE, N] }
+
+  break:reveal:
+    desc: Show the root cause (after you've solved it)
+    cmds:
+      - bash faults/run.sh "{{.MODULE}}" "{{.N}}" describe
+    requires: { vars: [MODULE, N] }
+
+  oncall-sim:
+    desc: "Random faults at random times (task oncall-sim HOURS=8 UPTO=C3)"
+    cmds:
+      - python faults/oncall_sim.py --hours "{{.HOURS}}" --upto "{{.UPTO}}"
+    requires: { vars: [HOURS, UPTO] }
+
+  tickets:
+    desc: "Seed this module's ServiceNow ticket queue (task tickets MODULE=W02)"
+    cmds:
+      - python itsm/seed-tickets.py --module "{{.MODULE}}"
+    requires: { vars: [MODULE] }
+
+  # --------------------------------------------------------- scenarios
+  scenario:up:
+    cmds:
+      - bash "$(bash {{.RESOLVE}} '{{.S}}')/scripts/up.sh"
+    requires: { vars: [S] }
+
+  scenario:inject:
+    cmds:
+      - bash "$(bash {{.RESOLVE}} '{{.S}}')/scripts/inject.sh" "{{.FAULT | default ""}}"
+    requires: { vars: [S] }
+
+  scenario:verify:
+    desc: "Run a scenario's grader (task scenario:verify S=S1)"
+    cmds:
+      - python "$(bash {{.RESOLVE}} '{{.S}}')/grader.py"
+    requires: { vars: [S] }
+
+  scenario:down:
+    cmds:
+      - bash "$(bash {{.RESOLVE}} '{{.S}}')/scripts/down.sh"
+    requires: { vars: [S] }
+
+  grade:
+    desc: "Run a convergence grader (task grade C=C3)"
+    cmds:
+      - python "$(bash {{.RESOLVE}} '{{.C}}')/grader.py"
+    requires: { vars: [C] }
+
+  grade:all:
+    desc: Regression — every grader you've unlocked (listed in platform/unlocked.txt)
+    cmds: [bash scripts/grade-all.sh]
